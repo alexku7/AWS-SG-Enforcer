@@ -1,0 +1,49 @@
+SecurityGroups:
+- GroupId: sg-0a71fc48f29180ed8
+  Description: test
+  GroupName: test
+  IpPermissions:
+  - FromPort: 2
+    IpProtocol: tcp
+    IpRanges:
+    - CidrIp: 74.201.99.0/28
+    - CidrIp: 74.201.95.2/32
+      Description: testtest
+    Ipv6Ranges: []
+    PrefixListIds: []
+    ToPort: 5
+    UserIdGroupPairs: []
+  - FromPort: 2
+    IpProtocol: tcp
+    IpRanges:
+    - CidrIp: 74.202.99.0/28
+    Ipv6Ranges: []
+    PrefixListIds: []
+    ToPort: 7
+    UserIdGroupPairs: []
+  - IpProtocol: '-1'
+    IpRanges:
+    - CidrIp: 74.203.99.0/28
+    Ipv6Ranges: 
+    - CidrIpv6: ::/0
+    PrefixListIds: []
+    UserIdGroupPairs: []
+  IpPermissionsEgress:
+  - FromPort: 80
+    IpProtocol: tcp
+    IpRanges: []
+    Ipv6Ranges: []
+    PrefixListIds: []
+    ToPort: 80
+    UserIdGroupPairs:
+    - GroupId: sg-03ca167cb8d9deb7a
+      UserId: 081893925220
+  - FromPort: 10
+    IpProtocol: tcp
+    IpRanges:
+    - CidrIp: 74.201.95.2/32
+    Ipv6Ranges: []
+    PrefixListIds: []
+    ToPort: 65
+    UserIdGroupPairs: []
+
