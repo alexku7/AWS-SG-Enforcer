@@ -12,36 +12,56 @@ import yaml
 
 client = boto3.client('ec2', region_name='us-east-1')
 
+# Load yaml file with the SG defintions 
 with open(r'SecurityGroups.yaml') as file:
   localSGs = yaml.load(file, Loader=yaml.FullLoader)
+
 ruleFound=False
 
+# Go through the SG list in the YAML definition file
 for sg in localSGs['SecurityGroups']:
-
     print ("Checking security group: " , sg['GroupId'])
 
-    
+    # get SG rules from AWS  
     awsSGs = client.describe_security_groups(GroupIds=[sg['GroupId']])
-    
-    #awsSGs =yaml.safe_dump(response,  default_flow_style=False)
-    
-    # print (awsSGs)
 
+# Go through the AWS SG rules and find rules which don't exist in the YAML file. Delete rules if needed form the SG 
+    for awsSG in awsSGs['SecurityGroups']:
+        for awsRule in awsSG['IpPermissions']:
+            print ("\nChecking if the AWS SG rule exists in local YAML file:\n" , awsRule, "\n")
+            ruleFound=False
+
+            for localRule in sg['IpPermissions']:
+                 print ("Local rule: ", localRule)
+                 if localRule == awsRule:
+                    print ("\nThe rule has been found in local YAML file \n")
+                    ruleFound=True
+                    break   
+       # If rule was not found , remove it from the AWS SG
+        if ruleFound != True: 
+            print ("\nThe rule was not found in the local YAML, delete the illegal rule ...\n")
+            print (awsRule)
+            data = client.revoke_security_group_ingress(
+                   GroupId=sg['GroupId'],
+                   DryRun=False,
+                   IpPermissions=[awsRule]
+            )
+
+
+    # Go through the rules in the yaml file and compare them with the existing rules in AWS SG
     for localRule in sg['IpPermissions']:
-        print ("\nChecking if the rule exists:" , localRule, "\n")
+        print ("\nChecking if the local rule exists in the AWS SG:\n" , localRule, "\n")
         ruleFound=False
-
     
         for awsSG in awsSGs['SecurityGroups']:
             for awsRule in awsSG['IpPermissions']:
-
                 print ("AWS rule: ", awsRule)
                 if localRule == awsRule:
                     print ("\nThe rule has been found in the AWS SG\n")
                     ruleFound=True
                     break
 
-       
+       # If rule was not found , add it to the SG
         if ruleFound != True: 
             print ("The rule was not found in the AWS SG, trying to create missing rule...")
             print (localRule)
@@ -50,3 +70,5 @@ for sg in localSGs['SecurityGroups']:
                    DryRun=False,
                    IpPermissions=[localRule]
             )
+
+    
